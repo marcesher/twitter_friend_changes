@@ -1,0 +1,14 @@
+{
+  "TwitterScreenName": "you",
+  "TwitterConsumerKey": "",
+  "TwitterConsumerSecret": "",
+  "TwitterAccessToken": "",
+  "TwitterAccessTokenSecret": "",
+  "FromEmail": "you@example.com",
+  "ToEmail": "you@example.com"
+}
+
+// Only populate the Email fields if you want to send email via AWS SES
+
+
+
