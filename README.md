@@ -43,7 +43,12 @@ You do not need the Go toolchain when using binaries.
 
 ### Initialize the config file
 
+If you pulled down the source:
+
 `cp config_sample.json config.json`
+
+If you're using a binary, then create a file in the same directory as the binary you downloaded, name it `config.json`,
+and paste in the contents of `config_sample.json` that you see in this repository.
 
 Open `config.json` in an editor. You're going to put stuff in here.
 
@@ -73,5 +78,20 @@ So, go do that, and get yourself an AWS_ACCESS_KEY_ID and AWS_SECRET_KEY, and co
 1. In `config.json` set the from and to email addresses
 1. When you run this application, set those AWS... values as environment variables, like:
 
-`$ AWS_ACCESS_KEY_ID="..." AWS_SECRET_KEY="..." twitter_friend_changes`
+`$ AWS_ACCESS_KEY_ID="..." AWS_SECRET_KEY="..." ./twitter_friend_changes`
 
+### Run it
+
+`$ ./twitter_friend_changes`
+
+Will run the thing, read your config file, and spit stuff out. 
+
+If you want to send emails, assuming you've endured the above indignities:
+
+`$ AWS_ACCESS_KEY_ID="..." AWS_SECRET_KEY="..." ./twitter_friend_changes`
+
+#### Cron
+
+I use this crontab:
+
+`0 6 * * * cd /var/www/twitter_friend_changes && AWS_ACCESS_KEY_ID=... AWS_SECRET_KEY=... ./twitter_friend_changes >> twitter_friend_changes.log`
