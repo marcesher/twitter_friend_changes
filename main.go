@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
 	"sort"
@@ -22,7 +23,7 @@ type Config struct {
 	TwitterAccessTokenSecret string
 
 	//if these are set, it'll attempt to send email via AWS SES
-	//If sending via AWS SES, you MUST set AWS_ACCESS_KEY_ID and AWS_SECRET_KEY environment variables
+	//If sending via AWS SES, you MUST set AWS_ACCESS_KEY_ID and AWS_SECRET_KEY environment variables.
 	FromEmail string
 	ToEmail   string
 }
@@ -57,16 +58,16 @@ func (u ById) Less(i, j int) bool {
 }
 
 var conf = readConfig()
+var logger = log.New(os.Stdout, "", log.LstdFlags)
 
 func main() {
-
 	users := getFriendsAsUsers()
 	userList := usersToString(users)
 	prepareFiles()
 	saveUsers(userList)
 	added, deleted := diff()
 
-	fmt.Printf("Added: \n\n%+v\n\nDeleted: \n\n%+v", added, deleted)
+	logger.Printf("Added: \n\n%+v\n\nDeleted: \n\n%+v\n\n", added, deleted)
 	if conf.ToEmail != "" {
 		email(added, deleted)
 	}
@@ -77,18 +78,17 @@ func main() {
 func readConfig() Config {
 	file, err := os.Open("config.json")
 	if err != nil {
-		fmt.Println("Could not open config.json")
-		panic(err)
+		logger.Panic("Could not open config.json %+v", err)
 	}
 
 	decoder := json.NewDecoder(file)
 	conf := Config{}
 	err = decoder.Decode(&conf)
 	if err != nil {
-		fmt.Println("Error decoding json config")
-		panic(err)
+		logger.Panic("Error decoding json config", err)
 	}
 
+	logger.Println("Configuration complete")
 	return conf
 }
 
@@ -99,13 +99,13 @@ func getFriendsAsUsers() []User {
 	api := anaconda.NewTwitterApi(conf.TwitterAccessToken, conf.TwitterAccessTokenSecret)
 	result := make(chan anaconda.UserCursor, 1000000) //YOLO
 
-	fmt.Println("getting friends")
+	logger.Println("getting friends")
 
 	v := url.Values{}
 	v.Set("screen_name", conf.TwitterScreenName)
 	getFriends(api, result, v)
 
-	fmt.Println("got em")
+	logger.Println("got em")
 
 	users := []User{}
 
@@ -127,7 +127,7 @@ func getFriends(api *anaconda.TwitterApi, result chan anaconda.UserCursor, v url
 
 	cursor, err := api.GetFriendsList(v)
 	if err != nil {
-		panic(err)
+		logger.Panic("Error getting friends from twitter", err)
 	}
 	result <- cursor
 
@@ -136,7 +136,7 @@ func getFriends(api *anaconda.TwitterApi, result chan anaconda.UserCursor, v url
 		return
 	}
 
-	fmt.Println("Fetching next set of friends, starting with cursor ", cursor.Next_cursor_str)
+	logger.Println("Fetching next set of friends, starting with cursor ", cursor.Next_cursor_str)
 	v.Set("cursor", cursor.Next_cursor_str)
 	getFriends(api, result, v)
 }
@@ -178,7 +178,7 @@ func prepareFiles() {
 func saveUsers(userList string) {
 	err := ioutil.WriteFile(CURRENT, []byte(userList), 0644)
 	if err != nil {
-		panic(err)
+		logger.Panic("Error saving users", err)
 	}
 }
 
@@ -215,18 +215,18 @@ func email(added, deleted []string) {
 		deletedList += u + "\n\n"
 	}
 
-	fmt.Println("Deleted:")
+	logger.Println("Deleted:")
 	for _, u := range deleted {
-		fmt.Println(u)
+		logger.Println(u)
 	}
 
 	message := fmt.Sprintf("%d Added: \n\n %v \n\n %d Deleted: \n\n %v\n\n", len(added), addedList, len(deleted), deletedList)
-	fmt.Println("message is " + message)
+	logger.Println("message is " + message)
 
 	res, err := ses.EnvConfig.SendEmail(conf.FromEmail, conf.ToEmail, "Twitter friend changes", message)
 	if err == nil {
-		fmt.Printf("Sent email: %s...\n", res)
+		logger.Printf("Sent email: %s...\n", res)
 	} else {
-		fmt.Printf("Error sending email: %s\n", err)
+		logger.Printf("Error sending email: %s\n", err)
 	}
 }

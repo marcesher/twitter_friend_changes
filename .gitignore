@@ -1,2 +1,7 @@
 config.json
+*.log
 *.txt
+twitter_friend_changes
+server_config/
+bin/
+
