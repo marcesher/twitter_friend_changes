@@ -45,17 +45,9 @@ func (u User) ToString() string {
 //gross user sorting stuff
 type ById []User
 
-func (u ById) Len() int {
-	return len(u)
-}
-
-func (u ById) Swap(i, j int) {
-	u[i], u[j] = u[j], u[i]
-}
-
-func (u ById) Less(i, j int) bool {
-	return u[i].Id < u[j].Id
-}
+func (u ById) Len() int           { return len(u) }
+func (u ById) Swap(i, j int)      { u[i], u[j] = u[j], u[i] }
+func (u ById) Less(i, j int) bool { return u[i].Id < u[j].Id }
 
 var conf = readConfig()
 var logger = log.New(os.Stdout, "", log.LstdFlags)
@@ -220,7 +212,7 @@ func email(added, deleted []string) {
 		logger.Println(u)
 	}
 
-	message := fmt.Sprintf("%d Added: \n\n %v \n\n %d Deleted: \n\n %v\n\n", len(added), addedList, len(deleted), deletedList)
+	message := fmt.Sprintf("%d Added, %d Deleted\n\nAdded: \n\n %v \n\nDeleted: \n\n %v\n\n", len(added), len(deleted), addedList, deletedList)
 	logger.Println("message is " + message)
 
 	res, err := ses.EnvConfig.SendEmail(conf.FromEmail, conf.ToEmail, "Twitter friend changes", message)
