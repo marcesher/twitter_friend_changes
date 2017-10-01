@@ -23,7 +23,6 @@ So if you follow someone new, unfollow someone intentionally or otherwise, or if
 
 You really have to be annoyed by this if you want to read further and maybe even try to use this yourself.
 
-Seriously, this is dependency shitshow. It's a LEWP: Least Effing Work Possible (for me, not you)
 
 ### Get the code
 
