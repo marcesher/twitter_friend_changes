@@ -34,6 +34,7 @@ type User struct {
 	ScreenName  string
 	Description string
 	Location    string
+	ProfileUrl  string
 }
 
 func (u User) ToString() string {
@@ -103,7 +104,7 @@ func getFriendsAsUsers() []User {
 
 	for uc := range result {
 		for _, u := range uc.Users {
-			users = append(users, User{u.Id, u.Name, u.ScreenName, u.Description, u.Location})
+			users = append(users, User{u.Id, u.Name, u.ScreenName, u.Description, u.Location, "https://twitter.com/" + u.ScreenName})
 		}
 	}
 
