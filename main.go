@@ -10,9 +10,17 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ses"
+
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/aryann/difflib"
-	"github.com/sourcegraph/go-ses"
+)
+
+const (
+	CharSet = "UTF-8"
 )
 
 type Config struct {
@@ -216,10 +224,72 @@ func email(added, deleted []string) {
 	message := fmt.Sprintf("%d Added, %d Deleted\n\nAdded: \n\n %v \n\nDeleted: \n\n %v\n\n", len(added), len(deleted), addedList, deletedList)
 	logger.Println("message is " + message)
 
-	res, err := ses.EnvConfig.SendEmail(conf.FromEmail, conf.ToEmail, "Twitter friend changes", message)
-	if err == nil {
-		logger.Printf("Sent email: %s...\n", res)
-	} else {
-		logger.Printf("Error sending email: %s\n", err)
+	// res, err := ses.EnvConfig.SendEmail(conf.FromEmail, conf.ToEmail, "Twitter friend changes", message)
+
+	Email(conf.FromEmail, conf.ToEmail, "Twitter friend changes", message, "")
+
+	// if err == nil {
+	// 	logger.Printf("Sent email: %s...\n", res)
+	// } else {
+	// 	logger.Printf("Error sending email: %s\n", err)
+	// }
+}
+
+func Email(from, to, subject, text, html string) {
+
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String("us-east-1")},
+	)
+
+	svc := ses.New(sess)
+
+	input := &ses.SendEmailInput{
+		Destination: &ses.Destination{
+			CcAddresses: []*string{},
+			ToAddresses: []*string{
+				aws.String(to),
+			},
+		},
+		Message: &ses.Message{
+			Body: &ses.Body{
+				Html: &ses.Content{
+					Charset: aws.String(CharSet),
+					Data:    aws.String(html),
+				},
+				Text: &ses.Content{
+					Charset: aws.String(CharSet),
+					Data:    aws.String(text),
+				},
+			},
+			Subject: &ses.Content{
+				Charset: aws.String(CharSet),
+				Data:    aws.String(subject),
+			},
+		},
+		Source: aws.String(from),
 	}
+
+	result, err := svc.SendEmail(input)
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case ses.ErrCodeMessageRejected:
+				fmt.Println(ses.ErrCodeMessageRejected, aerr.Error())
+			case ses.ErrCodeMailFromDomainNotVerifiedException:
+				fmt.Println(ses.ErrCodeMailFromDomainNotVerifiedException, aerr.Error())
+			case ses.ErrCodeConfigurationSetDoesNotExistException:
+				fmt.Println(ses.ErrCodeConfigurationSetDoesNotExistException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			fmt.Println(err.Error())
+		}
+
+		return
+	}
+
+	fmt.Println("Email Sent to address: " + to)
+	fmt.Println(result)
 }
