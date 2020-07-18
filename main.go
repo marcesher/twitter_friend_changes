@@ -224,18 +224,10 @@ func email(added, deleted []string) {
 	message := fmt.Sprintf("%d Added, %d Deleted\n\nAdded: \n\n %v \n\nDeleted: \n\n %v\n\n", len(added), len(deleted), addedList, deletedList)
 	logger.Println("message is " + message)
 
-	// res, err := ses.EnvConfig.SendEmail(conf.FromEmail, conf.ToEmail, "Twitter friend changes", message)
-
-	Email(conf.FromEmail, conf.ToEmail, "Twitter friend changes", message, "")
-
-	// if err == nil {
-	// 	logger.Printf("Sent email: %s...\n", res)
-	// } else {
-	// 	logger.Printf("Error sending email: %s\n", err)
-	// }
+	Email(conf.FromEmail, conf.ToEmail, "Twitter friend changes", message)
 }
 
-func Email(from, to, subject, text, html string) {
+func Email(from, to, subject, text string) {
 
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1")},
@@ -252,10 +244,6 @@ func Email(from, to, subject, text, html string) {
 		},
 		Message: &ses.Message{
 			Body: &ses.Body{
-				Html: &ses.Content{
-					Charset: aws.String(CharSet),
-					Data:    aws.String(html),
-				},
 				Text: &ses.Content{
 					Charset: aws.String(CharSet),
 					Data:    aws.String(text),
